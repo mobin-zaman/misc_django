@@ -2,8 +2,9 @@ from flask_restful import Resource, reqparse
 from flask import request, json
 from .model import User
 from .schema import UserSchema
-from app import api
+from app import api, db
 from marshmallow import ValidationError
+from werkzeug.security import generate_password_hash
 
 
 class UserApiPk(Resource):
@@ -22,7 +23,7 @@ class UserApiPk(Resource):
         json_input = request.get_json()
         print('got post')
         if not json_input:
-            return {'error ': 'bad request'}
+            return {'error ': 'bad request'}, 400
 
         # handler for UserSchema
         user_schema = UserSchema()
@@ -30,13 +31,27 @@ class UserApiPk(Resource):
         # first check the format of the request
         try:
             data = user_schema.load(json_input)
-            print('data',data)
+            print('data', data)
 
             """the below line fixed the issue with validation error"""
-            #pip install - U marshmallow - -pre
+            # pip install - U marshmallow - -pre
 
         except ValidationError as err:
             return {'errors': err.messages}, 422
+
+        if User.query.filter_by(username=data['username']).first():
+            return {'error': 'username exists'}, 400
+
+        if User.query.filter_by(email=data['email']).first():
+            return {'error': 'email exists'}, 400
+
+        hashed_password = generate_password_hash(data['password'])
+
+        new_user = User(data['username'], data['email'], hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        return {"message": "new user added"}, 200
 
     # the see if the username and email already exists
 

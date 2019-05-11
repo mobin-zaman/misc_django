@@ -1,5 +1,5 @@
 from .model import User
-from marshmallow import Schema, fields, validate, pre_load
+from marshmallow import Schema, fields, validate, post_load
 
 """custom validators"""
 
@@ -18,10 +18,9 @@ class UserSchema(Schema):
     class Meta:
         fields = ('id', 'username', 'email','password')
 
-    @pre_load
+    @post_load()
     def process_input(self, data):
         data['email'] = data['email'].lower().strip()
-        data['username'] = data['username'].lower().strip()
         return data
 
 
