@@ -9,22 +9,20 @@ from marshmallow import Schema, fields, validate, pre_load
 class UserSchema(Schema):
     """below lines are for validating json request from post"""
     id = fields.Int(dump_only=True)
-    username = fields.Str(80, required=True, validate=[validate.Length(min=5, max=10)])
-    email = fields.Str(required=True, validate=validate.Email(error="not a valid email address"))
-    password = fields.Str(required=True, validate=[validate.Length(min=6, max=36)], load_only=True)
+    username = fields.Str(80, required=True, validate=[validate.Length(min=4, max=10)])
+    email = fields.Str(required=True, validate=validate.Email())
+    password = fields.Str(required=True, validate=[validate.Length(min=8, max=36)])
     joined_on = fields.DateTime(dump_only=True)
 
     """meta is needed for formatting json returns"""
-
     class Meta:
-        fields = ('id', 'username', 'email')
+        fields = ('id', 'username', 'email','password')
 
-
-@pre_load
-def process_input(self, data):
-    data['email'] = data['email'].lower.strip()
-    data['username'] = data['username'].lower.strip()
-    return data
+    @pre_load
+    def process_input(self, data):
+        data['email'] = data['email'].lower().strip()
+        data['username'] = data['username'].lower().strip()
+        return data
 
 
 class JokeSchema(Schema):
